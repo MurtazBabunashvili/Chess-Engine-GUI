@@ -70,10 +70,18 @@ def main():
                 if e.key == p.K_z: #undo when z is pressed
                     gs.undo_move()
                     move_made = True
+                if e.key == p.K_r: #Resets board when r is pressed
+                    gs = ChessEngine.GameState()
+                    valid_moves = gs.get_valid_moves()
+                    square_selected = ()
+                    player_clicks = []
+                    move_made = False
         if move_made:
+            if len(gs.move_log) > 0:
+                animate_move(gs.move_log[-1], screen, gs.board, clock)
             valid_moves = gs.get_valid_moves()
             move_made = False
-        drawGameState(screen, gs)
+        drawGameState(screen, gs, valid_moves, square_selected)
 
         if promotion_mode:
             draw_promotion_menu(screen, gs)
@@ -81,8 +89,9 @@ def main():
         p.display.flip()
 
 
-def drawGameState(screen, gs):
+def drawGameState(screen, gs, valid_moves, square_selected):
     drawBoard(screen)
+    highlight_squares(screen, gs, valid_moves, square_selected)
     drawPieces(screen, gs.board)
 
 def drawBoard(screen):
@@ -137,12 +146,52 @@ def handle_promotion_click(event, gs, promotion_square):
             return True, promotion_square, False
     return True, promotion_square, False
 
+def highlight_squares(screen, game_screen, valid_moves, square_selected):
+    if square_selected != ():
+        row, column = square_selected
+        if game_screen.board[row][column][0] == ('w' if game_screen.whiteToMove else 'b'): #square selected is piece that can be moved
+            surface = p.Surface((SQ_SIZE, SQ_SIZE))
+            surface.set_alpha(100)
+            surface.fill(p.Color('grey'))
+            screen.blit(surface, (column * SQ_SIZE, row * SQ_SIZE)) #Highligts selected square
+
+            surface.fill(p.Color('Yellow'))
+            for move in valid_moves:
+                if move.start_row == row and move.start_column == column:
+                    screen.blit(surface, (move.end_column * SQ_SIZE, move.end_row*SQ_SIZE))
+
+
+
 def drawPieces(screen, board):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = str(board[r][c])
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+def animate_move(move, screen, board, clock):
+    colors = [p.Color("white"), p.Color("lime")]
+    dR = move.end_row - move.start_row
+    dC = move.end_column - move.start_column
+    frames_per_square = 10
+    frame_count = (abs(dR) + abs(dC)) *  frames_per_square
+
+    for frame in range(frame_count + 1):
+        row, column = (move.start_row + dR * frame / frame_count, move.start_column + dC * frame / frame_count)
+        drawBoard(screen)
+        drawPieces(screen, board)
+
+        color = colors[(move.end_row + move.end_column) % 2]
+        end_square = p.Rect(move.end_column * SQ_SIZE, move.end_row*SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        p.draw.rect(screen, color, end_square)
+
+        if move.pieceCaptured != "--":
+            screen.blit(IMAGES[move.pieceCaptured], end_square)
+
+        screen.blit(IMAGES[move.piece_moved], p.Rect(column*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        p.display.flip()
+        clock.tick(60)
+
 
 if __name__ == "__main__":
     main()
