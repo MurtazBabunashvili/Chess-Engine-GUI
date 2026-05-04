@@ -30,40 +30,42 @@ def main():
     running = True
     square_selected = ()
     player_clicks = []
+    game_over = False
 
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if promotion_mode:
-                    promotion_mode, promotion_square, move_made = handle_promotion_click(e, gs, promotion_square)
-                    continue
-                location = p.mouse.get_pos()
-                col = location[0]//SQ_SIZE
-                row = location[1]//SQ_SIZE
-                if square_selected == (row, col):
-                    square_selected = () #deselect
-                    player_clicks = []
-                else:
-                    square_selected = (row, col)
-                    player_clicks.append(square_selected)
-                if len(player_clicks) == 2: #Make a move
-                    move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
-                    print(move.getChessNotation())
-                    if move in valid_moves:
-
-                        if (move.piece_moved == 'wp' and move.end_row ==0) or \
-                                (move.piece_moved == 'bp' and move.end_row == 7):
-                            promotion_mode = True
-                            promotion_square = move
-                        else:
-                            gs.make_move(move)
-                            move_made = True
-                        square_selected = ()
+                if not game_over:
+                    if promotion_mode:
+                        promotion_mode, promotion_square, move_made = handle_promotion_click(e, gs, promotion_square)
+                        continue
+                    location = p.mouse.get_pos()
+                    col = location[0]//SQ_SIZE
+                    row = location[1]//SQ_SIZE
+                    if square_selected == (row, col):
+                        square_selected = () #deselect
                         player_clicks = []
                     else:
-                        player_clicks = [square_selected]
+                        square_selected = (row, col)
+                        player_clicks.append(square_selected)
+                    if len(player_clicks) == 2: #Make a move
+                        move = ChessEngine.Move(player_clicks[0], player_clicks[1], gs.board)
+                        print(move.getChessNotation())
+                        if move in valid_moves:
+
+                            if (move.piece_moved == 'wp' and move.end_row ==0) or \
+                                    (move.piece_moved == 'bp' and move.end_row == 7):
+                                promotion_mode = True
+                                promotion_square = move
+                            else:
+                                gs.make_move(move)
+                                move_made = True
+                            square_selected = ()
+                            player_clicks = []
+                        else:
+                            player_clicks = [square_selected]
             elif e.type == p.KEYDOWN:
                 if promotion_mode:
                     continue
@@ -82,6 +84,16 @@ def main():
             valid_moves = gs.get_valid_moves()
             move_made = False
         drawGameState(screen, gs, valid_moves, square_selected)
+
+        if gs.checkmate:
+            game_over = True
+            if gs.whiteToMove:
+                draw_text(screen, 'Black wins by checkmate')
+            else:
+                draw_text(screen, 'White wins by checkmate')
+        elif gs.stalemate:
+            game_over = True
+            draw_text(screen, 'Stalemate')
 
         if promotion_mode:
             draw_promotion_menu(screen, gs)
@@ -191,7 +203,13 @@ def animate_move(move, screen, board, clock):
         screen.blit(IMAGES[move.piece_moved], p.Rect(column*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
         p.display.flip()
         clock.tick(60)
+def draw_text(screen, text):
+    font = p.font.SysFont("Helvitca", 64, True, False)
+    text_object = font.render(text, 0, p.Color('Black'))
 
+    text_location = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - text_object.get_width() / 2,
+                                                     HEIGHT / 2 - text_object.get_height() / 2)
+    screen.blit(text_object, text_location)
 
 if __name__ == "__main__":
     main()

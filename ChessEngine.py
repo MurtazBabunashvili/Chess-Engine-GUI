@@ -164,6 +164,14 @@ class GameState():
             moves = self.get_all_possible_moves()
             ally_color = 'w' if self.whiteToMove else 'b'
             self.get_castle_moves(king_row, king_column, moves, ally_color)
+        if len(moves) == 0:
+            if self.inCheck:
+                self.checkmate = True
+            else:
+                self.stalemate = True
+        else:
+            self.checkmate = False
+            self.stalemate = False
 
         return moves
 
