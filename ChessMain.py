@@ -69,6 +69,7 @@ def main():
                     continue
                 if e.key == p.K_z: #undo when z is pressed
                     gs.undo_move()
+                    move_made = True
         if move_made:
             valid_moves = gs.get_valid_moves()
             move_made = False
@@ -116,8 +117,12 @@ def handle_promotion_click(event, gs, promotion_square):
         col = x // SQ_SIZE
 
         pieces = ['Q', 'R', 'B', 'N']
-        if 0 <= col < 4:
-            chosen_piece = pieces[col]
+        menu_width = 4 * SQ_SIZE
+        start_x = (WIDTH - menu_width) // 2
+        menu_col = (x - start_x) // SQ_SIZE
+
+        if 0 <= menu_col < 4:
+            chosen_piece = pieces[menu_col]
 
             move = promotion_square
 

@@ -23,6 +23,9 @@ class GameState():
         self.checkmate = False
         self.stalemate = False
 
+        self.en_passant_possible = ()
+        self.en_passant_log = [()]
+
 
     def make_move(self, move):
         self.board[move.start_row][move.start_column] = "--"
@@ -35,6 +38,17 @@ class GameState():
             self.white_king_location = (move.end_row, move.end_column)
         elif move.piece_moved == 'bK':
             self.black_king_location = (move.end_row, move.end_column)
+
+        #En passant
+        if move.piece_moved[1] == 'p' and move.start_column != move.end_column and move.pieceCaptured == "--":
+            self.board[move.start_row][move.end_column] = "--"
+
+        #En passant is possible if pawn moved 2 squares
+        self.en_passant_log.append(self.en_passant_possible)
+        if move.piece_moved[1] == 'p' and abs(move.start_row - move.end_row) == 2:
+            self.en_passant_possible = ((move.start_row + move.end_row)//2, move.end_column)
+        else:
+            self.en_passant_possible = ()
 
 
     def undo_move(self):
@@ -49,6 +63,12 @@ class GameState():
                 self.white_king_location = (move.start_row, move.start_column)
             elif move.piece_moved == 'bK':
                 self.black_king_location = (move.start_row, move.start_column)
+
+            #Restore en passant
+            self.en_passant_possible = self.en_passant_log.pop()
+            if move.piece_moved[1] == 'p' and move.start_column != move.end_column and move.pieceCaptured == "--":
+                enemy = 'b' if move.piece_moved[0] == 'w' else 'w'
+                self.board[move.start_row][move.end_column] = enemy + 'p'
 
     def get_valid_moves(self):
         #All general possible moves
@@ -134,11 +154,11 @@ class GameState():
                     if row == 6 and self.board[row-2][column] == "--":
                         moves.append(Move((row, column), (row-2, column), self.board))
             if column - 1 >= 0:
-                if self.board[row-1][column-1][0] == 'b': #enemy to capture in diagonal
+                if self.board[row-1][column-1][0] == 'b' or (row-1, column-1) == self.en_passant_possible: #enemy to capture in diagonal or en passant
                     if not piece_pinned or pin_direction == (-1, -1):
                         moves.append(Move((row, column), (row-1, column-1), self.board))
             if column + 1 <len(self.board): #captures to the right
-                if self.board[row-1][column+1][0] == 'b':
+                if self.board[row-1][column+1][0] == 'b' or (row-1, column+1) ==self.en_passant_possible:
                     if not piece_pinned or pin_direction == (-1, 1):
                         moves.append(Move((row, column), (row-1, column+1), self.board))
         else:
@@ -149,11 +169,11 @@ class GameState():
                         moves.append(Move((row, column), (row+2, column), self.board))
             if column - 1>=0: #Capture left
                 if not piece_pinned or pin_direction == (1, -1):
-                    if self.board[row+1][column-1][0] == 'w':
+                    if self.board[row+1][column-1][0] == 'w' or (row+1, column-1) == self.en_passant_possible:
                         moves.append(Move((row, column), (row+1, column-1), self.board))
             if column + 1<len(self.board): #Capture right
                 if not piece_pinned or pin_direction == (1, 1):
-                    if self.board[row+1][column+1][0] == 'w':
+                    if self.board[row+1][column+1][0] == 'w' or (row+1, column+1) == self.en_passant_possible:
                         moves.append(Move((row, column), (row+1, column+1), self.board))
 
     def get_rook_moves(self, row, column, moves):
