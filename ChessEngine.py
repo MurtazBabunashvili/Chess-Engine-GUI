@@ -16,12 +16,22 @@ class GameState():
 
         self.whiteToMove = True
         self.move_log = []
+        self.white_king_location = (7,4)
+        self.black_king_location = (0,4)
+
+
     def make_move(self, move):
         self.board[move.start_row][move.start_column] = "--"
         self.board[move.end_row][move.end_column] = move.piece_moved
 
         self.move_log.append(move)
         self.whiteToMove = not self.whiteToMove
+
+        if move.piece_moved == 'wK':
+            self.white_king_location = (move.end_row, move.end_column)
+        elif move.piece_moved == 'bK':
+            self.black_king_location = (move.end_row, move.end_column)
+
 
     def undo_move(self):
         if len(self.move_log) != 0:
@@ -30,8 +40,41 @@ class GameState():
             self.board[move.end_row][move.end_column] = move.pieceCaptured
             self.whiteToMove = not self.whiteToMove
 
+            if move.piece_moved == 'wK':
+                self.white_king_location = (move.start_row, move.start_column)
+            elif move.piece_moved == 'bK':
+                self.black_king_location = (move.start_row, move.start_column)
+
     def get_valid_moves(self):
-        return self.get_all_possible_moves()
+        #All general possible moves
+        moves = self.get_all_possible_moves()
+
+        #For each move make a move
+        for i in range(len(moves)-1, -1, -1):
+            self.make_move(moves[i])
+
+            self.whiteToMove = not self.whiteToMove
+            if self.in_check():
+                moves.remove(moves[i]) #If attacking move, not a valid move
+            self.whiteToMove = not self.whiteToMove
+            self.undo_move()
+        return moves
+
+    #Determines if player is in check
+    def in_check(self):
+        if self.whiteToMove:
+            return self.square_under_attack(self.white_king_location[0], self.white_king_location[1])
+        else:
+            return self.square_under_attack(self.black_king_location[0], self.black_king_location[1])
+
+    #determines if enemy can attack square (row, column)
+    def square_under_attack(self, row, column):
+        self.whiteToMove = not self.whiteToMove # Switch to opponent's view
+        opponent_moves = self.get_all_possible_moves()
+        self.whiteToMove = not self.whiteToMove  # Switch back
+        for move in opponent_moves: #Iterate through opponent's moves
+            if move.end_row == row and move.end_column == column: # Square under attack
+                return True
 
     def get_all_possible_moves(self):
         moves = []
@@ -117,9 +160,18 @@ class GameState():
                 else:
                     break
     def get_queen_moves(self, row, column, moves):
-        pass
+        self.get_rook_moves(row, column, moves)
+        self.get_bishop_moves(row, column, moves)
     def get_king_moves(self, row, column, moves):
-        pass
+        king_moves = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1,1))
+        ally_color = 'w' if self.whiteToMove else 'b'
+        for i in range(8):
+            end_row = row + king_moves[i][0]
+            end_column = column + king_moves[i][1]
+            if 0 <= end_row < 8 and 0 <= end_column < 8:
+                end_piece = self.board[end_row][end_column]
+                if end_piece[0] != ally_color:
+                    moves.append(Move((row, column), (end_row, end_column), self.board))
 
 class Move():
     ranks_to_rows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7":1, "8": 0}
