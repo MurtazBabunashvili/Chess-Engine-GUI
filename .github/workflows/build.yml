@@ -1,0 +1,37 @@
+name: Build Linux
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install python3-pip -y
+          pip3 install pygame numpy pyinstaller
+
+      - name: Build binary
+        run: |
+          pyinstaller --onefile --add-data "pieces:pieces" ChessMain.py
+
+      - name: Build deb
+        run: |
+          mkdir -p chessgame/DEBIAN
+          mkdir -p chessgame/usr/local/bin
+          cp dist/ChessMain chessgame/usr/local/bin/chessgame
+          echo "Package: chessgame
+          Version: 1.0
+          Architecture: amd64
+          Maintainer: You
+          Description: Chess AI game" > chessgame/DEBIAN/control
+          dpkg-deb --build chessgame
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v3
+        with:
+          name: chessgame-deb
+          path: chessgame.deb

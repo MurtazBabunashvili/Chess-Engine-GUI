@@ -1,3 +1,6 @@
+import os
+import sys
+
 import numpy
 import pygame as p
 import ChessEngine, ChessAI
@@ -7,12 +10,18 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 def load_images():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ',
               'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
-        image = p.image.load("pieces/" + piece + ".png")
+        image = p.image.load(resource_path(os.path.join("pieces", piece + ".png")))
         IMAGES[piece] = p.transform.scale(image, (SQ_SIZE, SQ_SIZE))
+
 
 def main():
     p.init()
@@ -75,6 +84,7 @@ def main():
                 if promotion_mode:
                     continue
                 if e.key == p.K_z: #undo when z is pressed
+                    gs.undo_move()
                     gs.undo_move()
                     move_made = True
                 if e.key == p.K_r: #Resets board when r is pressed
