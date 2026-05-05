@@ -11,15 +11,15 @@ def find_best_move(game_screen, valid_moves):
     turn_multiplier = 1 if game_screen.whiteToMove else -1
     opponent_min_max_score = CHECKMATE
     best_player_move = None
-    opponents_max_score = -CHECKMATE
 
     for player_move in valid_moves:
+        opponents_max_score = -CHECKMATE
         game_screen.make_move(player_move)
         opponents_moves = game_screen.get_valid_moves()
         for opponents_move in opponents_moves:
             game_screen.make_move(opponents_move)
             if game_screen.checkmate:
-                score = -turn_multiplier * CHECKMATE
+                score = CHECKMATE
             elif game_screen.stalemate:
                 score = STALEMATE
             else:
