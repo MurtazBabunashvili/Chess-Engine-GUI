@@ -161,11 +161,8 @@ def handle_promotion_click(event, gs, promotion_square):
 
             move = promotion_square
 
-            gs.board[move.start_row][move.start_column] = "--"
+            gs.make_move(move)
             gs.board[move.end_row][move.end_column] = move.piece_moved[0] + chosen_piece
-
-            gs.move_log.append(move)
-            gs.whiteToMove = not gs.whiteToMove
 
             return False, None, True
         else:

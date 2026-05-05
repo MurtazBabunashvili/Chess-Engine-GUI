@@ -215,33 +215,35 @@ class GameState():
                 break
 
         if self.whiteToMove:
-            if self.board[row-1][column] == "--": #move forward
-                if not piece_pinned or pin_direction == (-1, 0):
-                    moves.append(Move((row, column), (row-1, column), self.board))
-                    if row == 6 and self.board[row-2][column] == "--":
-                        moves.append(Move((row, column), (row-2, column), self.board))
-            if column - 1 >= 0:
-                if self.board[row-1][column-1][0] == 'b' or (row-1, column-1) == self.en_passant_possible: #enemy to capture in diagonal or en passant
-                    if not piece_pinned or pin_direction == (-1, -1):
-                        moves.append(Move((row, column), (row-1, column-1), self.board))
-            if column + 1 <len(self.board): #captures to the right
-                if self.board[row-1][column+1][0] == 'b' or (row-1, column+1) ==self.en_passant_possible:
-                    if not piece_pinned or pin_direction == (-1, 1):
-                        moves.append(Move((row, column), (row-1, column+1), self.board))
+            if row - 1 >= 0:
+                if self.board[row-1][column] == "--": #move forward
+                    if not piece_pinned or pin_direction == (-1, 0):
+                        moves.append(Move((row, column), (row-1, column), self.board))
+                        if row == 6 and self.board[row-2][column] == "--":
+                            moves.append(Move((row, column), (row-2, column), self.board))
+                if column - 1 >= 0:
+                    if self.board[row-1][column-1][0] == 'b' or (row-1, column-1) == self.en_passant_possible: #enemy to capture in diagonal or en passant
+                        if not piece_pinned or pin_direction == (-1, -1):
+                            moves.append(Move((row, column), (row-1, column-1), self.board))
+                if column + 1 <len(self.board): #captures to the right
+                    if self.board[row-1][column+1][0] == 'b' or (row-1, column+1) ==self.en_passant_possible:
+                        if not piece_pinned or pin_direction == (-1, 1):
+                            moves.append(Move((row, column), (row-1, column+1), self.board))
         else:
-            if self.board[row+1][column] == "--": #Move forward as black
-                if not piece_pinned or pin_direction == (1, 0):
-                    moves.append(Move((row, column), (row+1, column), self.board))
-                    if row == 1 and self.board[row+2][column] == "--":
-                        moves.append(Move((row, column), (row+2, column), self.board))
-            if column - 1>=0: #Capture left
-                if not piece_pinned or pin_direction == (1, -1):
-                    if self.board[row+1][column-1][0] == 'w' or (row+1, column-1) == self.en_passant_possible:
-                        moves.append(Move((row, column), (row+1, column-1), self.board))
-            if column + 1<len(self.board): #Capture right
-                if not piece_pinned or pin_direction == (1, 1):
-                    if self.board[row+1][column+1][0] == 'w' or (row+1, column+1) == self.en_passant_possible:
-                        moves.append(Move((row, column), (row+1, column+1), self.board))
+            if row + 1 < 8:
+                if row + 1 < 8 and self.board[row+1][column] == "--": #Move forward as black
+                    if not piece_pinned or pin_direction == (1, 0):
+                        moves.append(Move((row, column), (row+1, column), self.board))
+                        if row == 1 and self.board[row+2][column] == "--":
+                            moves.append(Move((row, column), (row+2, column), self.board))
+                if column - 1>=0: #Capture left
+                    if not piece_pinned or pin_direction == (1, -1):
+                        if self.board[row+1][column-1][0] == 'w' or (row+1, column-1) == self.en_passant_possible:
+                            moves.append(Move((row, column), (row+1, column-1), self.board))
+                if column + 1<len(self.board): #Capture right
+                    if not piece_pinned or pin_direction == (1, 1):
+                        if self.board[row+1][column+1][0] == 'w' or (row+1, column+1) == self.en_passant_possible:
+                            moves.append(Move((row, column), (row+1, column+1), self.board))
 
     def get_rook_moves(self, row, column, moves):
         piece_pinned = False
