@@ -1,6 +1,6 @@
 import numpy
 import pygame as p
-import ChessEngine
+import ChessEngine, ChessAI
 WIDTH = HEIGHT = 800
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
@@ -32,12 +32,17 @@ def main():
     player_clicks = []
     game_over = False
 
+    player_white = True #Human is playing white, then true, AI white => false
+    player_black = False #Human black => True, AI black => false
+
     while running:
+        is_human_turn = (gs.whiteToMove and player_white) or (not gs.whiteToMove and player_black)
+
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not game_over:
+                if not game_over and is_human_turn:
                     if promotion_mode:
                         promotion_mode, promotion_square, move_made = handle_promotion_click(e, gs, promotion_square)
                         continue
@@ -78,6 +83,13 @@ def main():
                     square_selected = ()
                     player_clicks = []
                     move_made = False
+
+        #AI move finder
+        if not game_over and not is_human_turn:
+            ai_move = ChessAI.find_random_move(valid_moves)
+            gs.make_move(ai_move)
+            move_made = True
+
         if move_made:
             if len(gs.move_log) > 0:
                 animate_move(gs.move_log[-1], screen, gs.board, clock)
