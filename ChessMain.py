@@ -1,6 +1,7 @@
 import os
 import sys
 import threading
+import copy
 
 import pygame as p
 import ChessEngine, ChessAI
@@ -27,6 +28,7 @@ def load_images():
 
 
 def main():
+    global ai_thinking, ai_move_result
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
@@ -91,6 +93,8 @@ def main():
                     gs.undo_move()
                     move_made = True
                     game_over = False
+                    ai_thinking = False
+                    ai_move_result[0] = None
                 if e.key == p.K_r: #Resets board when r is pressed
                     gs = ChessEngine.GameState()
                     valid_moves = gs.get_valid_moves()
@@ -98,14 +102,19 @@ def main():
                     player_clicks = []
                     move_made = False
                     game_over = False
+                    ai_thinking = False
+                    ai_move_result[0] = None
+                    ChessAI.transposition_table = ChessAI.TranspositionTable()
 
         #AI move finder
         if not game_over and not is_human_turn and not ai_thinking:
             ai_thinking = True
+            gs_copy = copy.deepcopy(gs)
+            valid_moves_copy = gs_copy.get_valid_moves()
             def ai_thread():
-                ai_move = ChessAI.find_best_move_nega_max(gs, valid_moves)
+                ai_move = ChessAI.find_best_move_nega_max(gs_copy, valid_moves_copy)
                 if ai_move is None:
-                    ai_move = ChessAI.find_random_move(valid_moves)
+                    ai_move = ChessAI.find_random_move(valid_moves_copy)
                 ai_move_result[0] = ai_move
             threading.Thread(target=ai_thread, daemon=True).start()
 
