@@ -38,6 +38,31 @@ CHECKMATE = 1000 #Always best
 STALEMATE = 0 #neither win nor lose
 DEPTH=4
 
+
+OPENING_BOOK = {
+    # White openings
+    "": ["e2e4", "d2d4"],
+    "e2e4": ["e7e5", "c7c5", "e7e6"],
+    "d2d4": ["d7d5", "g8f6"],
+    "e2e4e7e5": ["g1f3", "f1c4", "f2f4"],
+    "e2e4c7c5": ["g1f3", "d2d4"],
+    "e2e4e7e6": ["d2d4", "g1f3"],
+    "d2d4d7d5": ["c2c4", "g1f3"],
+    "d2d4g8f6": ["c2c4", "g1f3"],
+}
+
+
+def get_opening_moves(game_screen, valid_moves):
+    moves_so_far = "".join(m.getChessNotation() for m in game_screen.move_log)
+    if moves_so_far in OPENING_BOOK:
+        candidates = OPENING_BOOK[moves_so_far]
+        random.shuffle(candidates)
+        for notation in candidates:
+            for move in valid_moves:
+                if move.getChessNotation() == notation:
+                    return move
+    return None
+
 def find_random_move(valid_moves):
     return valid_moves[random.randint(0, len(valid_moves)-1)]
 
@@ -131,6 +156,9 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
 
 def find_best_move_nega_max(game_screen, valid_moves):
     global next_move
+    opening_move = get_opening_moves(game_screen, valid_moves)
+    if opening_move:
+        return opening_move
     next_move = None
     nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
     return next_move
@@ -207,7 +235,40 @@ pawn_table = [
     [ 0,  0,  0,  0,  0,  0,  0,  0]
 ]
 
-position_tables = {'N': knight_table, 'p': pawn_table}
+bishop_table = [
+    [-2,-1,-1,-1,-1,-1,-1,-2],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [-1, 0, 1, 1, 1, 1, 0,-1],
+    [-1, 1, 1, 2, 2, 1, 1,-1],
+    [-1, 0, 2, 2, 2, 2, 0,-1],
+    [-1, 2, 2, 2, 2, 2, 2,-1],
+    [-1, 1, 0, 0, 0, 0, 1,-1],
+    [-2,-1,-1,-1,-1,-1,-1,-2]
+]
+
+rook_table = [
+    [ 0, 0, 0, 0, 0, 0, 0, 0],
+    [ 1, 2, 2, 2, 2, 2, 2, 1],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [-1, 0, 0, 0, 0, 0, 0,-1],
+    [ 0, 0, 0, 1, 1, 0, 0, 0]
+]
+
+king_table = [
+    [-3,-4,-4,-5,-5,-4,-4,-3],
+    [-3,-4,-4,-5,-5,-4,-4,-3],
+    [-3,-4,-4,-5,-5,-4,-4,-3],
+    [-3,-4,-4,-5,-5,-4,-4,-3],
+    [-2,-3,-3,-4,-4,-3,-3,-2],
+    [-1,-2,-2,-2,-2,-2,-2,-1],
+    [ 2, 2, 0, 0, 0, 0, 2, 2],
+    [ 2, 3, 1, 0, 0, 1, 3, 2]
+]
+
+position_tables = {'N': knight_table, 'p': pawn_table, 'B': bishop_table, 'R': rook_table, 'K': king_table}
 #Positive good for white, negative good for black
 def score_board(game_screen):
     if game_screen.checkmate:
