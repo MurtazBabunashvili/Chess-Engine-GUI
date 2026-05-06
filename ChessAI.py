@@ -1,4 +1,39 @@
 import random
+import hashlib
+
+class TranspositionTable:
+    EXACT = 0
+    LOWERBOUND = 1
+    UPPERBOUND = 2
+
+    def __init__(self):
+        self.table = {}
+
+    def store(self, board_hash, depth, score, flag): #Overwrites if new entry is more valuable
+        if board_hash not in self.table or self.table[board_hash][0] <= depth:
+            self.table[board_hash] = (depth, score, flag)
+
+    def lookup(self, board_hash, depth, alpha, beta):
+        if board_hash not in self.table:
+            return None
+        stored_depth, score, flag = self.table[board_hash]
+        if stored_depth >= depth:
+            if flag == self.EXACT:
+                return score
+            elif flag == self.LOWERBOUND and score > alpha:
+                alpha = score
+            elif flag == self.UPPERBOUND and score < beta:
+                beta = score
+            if alpha >= beta:
+                return score
+        return None
+
+transposition_table = TranspositionTable()
+
+def hash_board(game_screen):
+    board_str = game_screen.board.tobytes()
+    turn = b'w' if game_screen.whiteToMove else b'b'
+    return hashlib.md5(board_str + turn).hexdigest()
 
 piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player gains when capturing following pieces
 CHECKMATE = 1000 #Always best
@@ -99,17 +134,26 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
 def find_best_move_nega_max(game_screen, valid_moves):
     global next_move
     next_move = None
+    transposition_table.table.clear()
     nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
     return next_move
 
 def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, turn_multiplier):
     global next_move
+
+    board_hash = hash_board(game_screen)
+    table_result = transposition_table.lookup(board_hash, depth, alpha, beta)
+
+    if table_result is not None:
+        return table_result
+
     if depth == 0:
         return quiescence(game_screen, alpha, beta, turn_multiplier)
 
     #Move ordering
     valid_moves = order_moves(valid_moves)
 
+    original_alpha = alpha
     max_score = -CHECKMATE
     for move in valid_moves:
         game_screen.make_move(move)
@@ -119,12 +163,20 @@ def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, tu
             max_score = score
             if depth == DEPTH:
                 next_move = move
-
         game_screen.undo_move()
         if max_score > alpha:
             alpha = max_score
         if alpha >= beta:
             break
+
+    if max_score <= original_alpha:
+        flag = TranspositionTable.UPPERBOUND
+    elif max_score >= beta:
+        flag = TranspositionTable.LOWERBOUND
+    else:
+        flag = TranspositionTable.EXACT
+    transposition_table.store(board_hash, depth, max_score, flag)
+
     return max_score
 
 def score_move(move):
