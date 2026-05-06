@@ -88,6 +88,20 @@ class GameState():
             if move.start_row == 0:
                 if move.start_column == 7: self.current_castling_rights.black_king_side = False
                 if move.start_column == 0: self.current_castling_rights.black_queen_side = False
+
+        if move.pieceCaptured == 'wR':
+            if move.end_row == 7:
+                if move.end_column == 7:
+                    self.current_castling_rights.white_king_side = False
+                elif move.end_column == 0:
+                    self.current_castling_rights.white_queen_side = False
+        elif move.pieceCaptured == 'bR':
+            if move.end_row == 0:
+                if move.end_column == 7:
+                    self.current_castling_rights.black_king_side = False
+                elif move.end_column == 0:
+                    self.current_castling_rights.black_queen_side = False
+
     def undo_move(self):
         if len(self.move_log) != 0:
             move = self.move_log.pop()
@@ -124,7 +138,13 @@ class GameState():
                     self.board[0][3] = "--"
 
             self.castle_rights_log.pop()
-            self.current_castling_rights = self.castle_rights_log[-1]
+            last = self.castle_rights_log[-1]
+            self.current_castling_rights = CastleRights(
+                last.white_king_side,
+                last.black_king_side,
+                last.white_queen_side,
+                last.black_queen_side
+            )
 
             self.checkmate = False
             self.stalemate = False
