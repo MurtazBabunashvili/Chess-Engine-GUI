@@ -36,7 +36,7 @@ def hash_board(game_screen):
 piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player gains when capturing following pieces
 CHECKMATE = 1000 #Always best
 STALEMATE = 0 #neither win nor lose
-DEPTH=4
+DEPTH=3
 killer_moves = [[None, None] for _ in range(10)]
 
 
