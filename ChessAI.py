@@ -79,15 +79,17 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
 def find_best_move_nega_max(game_screen, valid_moves):
     global next_move
     next_move = None
-    random.shuffle(valid_moves)
     nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
     return next_move
+
 def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, turn_multiplier):
     global next_move
     if depth == 0:
         return turn_multiplier * score_board(game_screen)
 
     #Move ordering
+    valid_moves = order_moves(valid_moves)
+
     max_score = -CHECKMATE
     for move in valid_moves:
         game_screen.make_move(move)
@@ -104,6 +106,39 @@ def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, tu
         if alpha >= beta:
             break
     return max_score
+
+def score_move(move):
+    score =0
+    if move.pieceCaptured != "--":
+        #If we capture queen with pawn = great, if pawn with queen => less urgent
+        score = 10 * piece_rank[move.pieceCaptured[1]] - piece_rank[move.piece_moved[1]]
+    return score
+def order_moves(moves):
+    return sorted(moves, key=score_move, reverse=True)
+
+knight_table = [
+    [-5, -4, -3, -3, -3, -3, -4, -5],
+    [-4, -2,  0,  0,  0,  0, -2, -4],
+    [-3,  0,  1,  2,  2,  1,  0, -3],
+    [-3,  1,  2,  3,  3,  2,  1, -3],
+    [-3,  0,  2,  3,  3,  2,  0, -3],
+    [-3,  1,  1,  2,  2,  1,  1, -3],
+    [-4, -2,  0,  1,  1,  0, -2, -4],
+    [-5, -4, -3, -3, -3, -3, -4, -5]
+]
+
+pawn_table = [
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 5,  5,  5,  5,  5,  5,  5,  5],
+    [ 1,  1,  2,  3,  3,  2,  1,  1],
+    [ 0,  0,  1,  2,  2,  1,  0,  0],
+    [ 0,  0,  0,  2,  2,  0,  0,  0],
+    [ 0, -1, -1,  0,  0, -1, -1,  0],
+    [ 0,  1,  1, -2, -2,  1,  1,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0]
+]
+
+position_tables = {'N': knight_table, 'p': pawn_table}
 #Positive good for white, negative good for black
 def score_board(game_screen):
     if game_screen.checkmate:
@@ -115,10 +150,15 @@ def score_board(game_screen):
         return STALEMATE
 
     score = 0
-    for row in game_screen.board:
-        for square in row:
+    for row in range(8):
+        for column in range(8):
+            square = game_screen.board[row][column]
             if square[0] == 'w':
                 score += piece_rank[square[1]]
+                if square[1] in position_tables:
+                    score += position_tables[square[1]][row][column] * 0.1
             elif square[0] == 'b':
                 score -= piece_rank[square[1]]
+                if square[1] in position_tables:
+                    score -= position_tables[square[1]][7 - row][column] * 0.1
     return score
