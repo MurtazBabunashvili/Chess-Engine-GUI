@@ -126,6 +126,9 @@ class GameState():
             self.castle_rights_log.pop()
             self.current_castling_rights = self.castle_rights_log[-1]
 
+            self.checkmate = False
+            self.stalemate = False
+
 
     def get_valid_moves(self):
         #All general possible moves
