@@ -37,18 +37,143 @@ piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player
 CHECKMATE = 1000 #Always best
 STALEMATE = 0 #neither win nor lose
 DEPTH=4
+killer_moves = [[None, None] for _ in range(10)]
 
 
 OPENING_BOOK = {
-    # White openings
+    # === FIRST MOVES ===
     "": ["e2e4", "d2d4"],
-    "e2e4": ["e7e5", "c7c5", "e7e6"],
-    "d2d4": ["d7d5", "g8f6"],
-    "e2e4e7e5": ["g1f3", "f1c4", "f2f4"],
-    "e2e4c7c5": ["g1f3", "d2d4"],
-    "e2e4e7e6": ["d2d4", "g1f3"],
-    "d2d4d7d5": ["c2c4", "g1f3"],
-    "d2d4g8f6": ["c2c4", "g1f3"],
+
+    # === AFTER 1.e4 ===
+    "e2e4": ["e7e5", "c7c5", "e7e6", "c7c6", "d7d5"],
+
+    # --- Italian Game / Ruy Lopez ---
+    "e2e4e7e5": ["g1f3"],
+    "e2e4e7e5g1f3": ["b8c6", "g8f6"],
+    "e2e4e7e5g1f3b8c6": ["f1b5", "f1c4"],  # Ruy Lopez or Italian
+
+    # Ruy Lopez main line
+    "e2e4e7e5g1f3b8c6f1b5": ["a7a6", "g8f6", "f8c5"],
+    "e2e4e7e5g1f3b8c6f1b5a7a6": ["b5a4"],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4": ["g8f6"],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6": ["e1g1"],  # Castle!
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6e1g1": ["f8e7", "b7b5"],
+
+    # Italian Game
+    "e2e4e7e5g1f3b8c6f1c4": ["f8c5", "g8f6", "e7e6"],
+    "e2e4e7e5g1f3b8c6f1c4f8c5": ["c2c3", "e1g1"],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3": ["g8f6", "d7d6"],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3g8f6": ["d2d4"],
+
+    # Petrov Defense
+    "e2e4e7e5g1f3g8f6": ["f3e5", "d2d4"],
+    "e2e4e7e5g1f3g8f6f3e5": ["d7d6", "f6e4"],
+
+    # --- Sicilian Defense ---
+    "e2e4c7c5": ["g1f3"],
+    "e2e4c7c5g1f3": ["d7d6", "b8c6", "e7e6"],
+
+    # Sicilian Najdorf
+    "e2e4c7c5g1f3d7d6": ["d2d4"],
+    "e2e4c7c5g1f3d7d6d2d4": ["c5d4"],
+    "e2e4c7c5g1f3d7d6d2d4c5d4": ["f3d4"],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4": ["g8f6"],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6": ["b1c3"],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6b1c3": ["a7a6"],  # Najdorf
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6b1c3a7a6": ["c1e3", "f2f3", "g2g4"],
+
+    # Sicilian Dragon
+    "e2e4c7c5g1f3b8c6": ["d2d4"],
+    "e2e4c7c5g1f3b8c6d2d4": ["c5d4"],
+    "e2e4c7c5g1f3b8c6d2d4c5d4": ["f3d4"],
+    "e2e4c7c5g1f3b8c6d2d4c5d4f3d4": ["g7g6"],  # Dragon
+    "e2e4c7c5g1f3b8c6d2d4c5d4f3d4g7g6": ["b1c3"],
+
+    # Sicilian Scheveningen / Classical
+    "e2e4c7c5g1f3e7e6": ["d2d4"],
+    "e2e4c7c5g1f3e7e6d2d4": ["c5d4"],
+    "e2e4c7c5g1f3e7e6d2d4c5d4": ["f3d4"],
+    "e2e4c7c5g1f3e7e6d2d4c5d4f3d4": ["g8f6", "b8c6"],
+    "e2e4c7c5g1f3e7e6d2d4c5d4f3d4g8f6": ["b1c3"],
+    "e2e4c7c5g1f3e7e6d2d4c5d4f3d4g8f6b1c3": ["d7d6", "f8b4"],
+
+    # --- French Defense ---
+    "e2e4e7e6": ["d2d4"],
+    "e2e4e7e6d2d4": ["d7d5"],
+    "e2e4e7e6d2d4d7d5": ["b1c3", "e4e5", "e4d5"],
+    "e2e4e7e6d2d4d7d5b1c3": ["g8f6", "f8b4"],  # Classical / Winawer
+    "e2e4e7e6d2d4d7d5b1c3f8b4": ["e4e5", "a2a3"],  # Winawer
+    "e2e4e7e6d2d4d7d5b1c3g8f6": ["c1g5"],  # Classical French
+
+    # --- Caro-Kann ---
+    "e2e4c7c6": ["d2d4"],
+    "e2e4c7c6d2d4": ["d7d5"],
+    "e2e4c7c6d2d4d7d5": ["b1c3", "e4d5", "e4e5"],
+    "e2e4c7c6d2d4d7d5b1c3": ["d5e4", "g8f6"],
+    "e2e4c7c6d2d4d7d5b1c3d5e4": ["c3e4"],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4": ["g8f6", "c8f5"],
+
+    # --- Scandinavian ---
+    "e2e4d7d5": ["e4d5"],
+    "e2e4d7d5e4d5": ["d8d5", "g8f6"],
+    "e2e4d7d5e4d5d8d5": ["b1c3"],
+    "e2e4d7d5e4d5d8d5b1c3": ["d5a5", "d5d6"],
+
+    # === AFTER 1.d4 ===
+    "d2d4": ["d7d5", "g8f6", "f7f5"],
+
+    # --- Queen's Gambit ---
+    "d2d4d7d5": ["c2c4"],
+    "d2d4d7d5c2c4": ["e7e6", "c7c6", "d5c4"],
+
+    # QGD
+    "d2d4d7d5c2c4e7e6": ["b1c3", "g1f3"],
+    "d2d4d7d5c2c4e7e6b1c3": ["g8f6", "f8e7"],
+    "d2d4d7d5c2c4e7e6b1c3g8f6": ["c1g5", "g1f3"],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c1g5": ["f8e7", "b8d7"],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c1g5f8e7": ["e2e3", "g1f3"],
+
+    # Slav Defense
+    "d2d4d7d5c2c4c7c6": ["g1f3", "b1c3"],
+    "d2d4d7d5c2c4c7c6g1f3": ["g8f6", "d5c4"],
+    "d2d4d7d5c2c4c7c6g1f3g8f6": ["b1c3", "e2e3"],
+    "d2d4d7d5c2c4c7c6g1f3g8f6b1c3": ["d5c4", "e7e6", "a7a6"],
+
+    # QGA
+    "d2d4d7d5c2c4d5c4": ["e2e4", "g1f3"],
+    "d2d4d7d5c2c4d5c4e2e4": ["e7e5", "g8f6"],
+
+    # --- King's Indian Defense ---
+    "d2d4g8f6": ["c2c4"],
+    "d2d4g8f6c2c4": ["g7g6", "e7e6", "c7c5"],
+    "d2d4g8f6c2c4g7g6": ["b1c3", "g1f3"],
+    "d2d4g8f6c2c4g7g6b1c3": ["f8g7"],
+    "d2d4g8f6c2c4g7g6b1c3f8g7": ["e2e4"],  # KID main line
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4": ["d7d6", "e1g1"],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6": ["g1f3"],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6g1f3": ["e1g1"],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6g1f3e1g1": ["e7e5"],  # KID Classical
+
+    # --- Nimzo-Indian Defense ---
+    "d2d4g8f6c2c4e7e6": ["b1c3"],
+    "d2d4g8f6c2c4e7e6b1c3": ["f8b4"],  # Nimzo-Indian
+    "d2d4g8f6c2c4e7e6b1c3f8b4": ["e2e3", "d1c2", "g1f3", "a2a3"],
+    "d2d4g8f6c2c4e7e6b1c3f8b4e2e3": ["e1g1", "c7c5", "b7b6"],
+    "d2d4g8f6c2c4e7e6b1c3f8b4d1c2": ["e1g1", "c7c5"],
+
+    # --- Grünfeld Defense ---
+    "d2d4g8f6c2c4g7g6b1c3": ["d7d5"],  # Grünfeld
+    "d2d4g8f6c2c4g7g6b1c3d7d5": ["c4d5"],
+    "d2d4g8f6c2c4g7g6b1c3d7d5c4d5": ["f6d5"],
+    "d2d4g8f6c2c4g7g6b1c3d7d5c4d5f6d5": ["e2e4"],
+    "d2d4g8f6c2c4g7g6b1c3d7d5c4d5f6d5e2e4": ["d5c3"],
+    "d2d4g8f6c2c4g7g6b1c3d7d5c4d5f6d5e2e4d5c3": ["b2c3", "d1d8"],
+
+    # --- Dutch Defense ---
+    "d2d4f7f5": ["g2g3", "c2c4"],
+    "d2d4f7f5c2c4": ["g8f6", "e7e6"],
+    "d2d4f7f5c2c4g8f6": ["g2g3"],
+    "d2d4f7f5c2c4g8f6g2g3": ["e7e6", "g7g6"],
 }
 
 
@@ -155,43 +280,71 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
         return min_score
 
 def find_best_move_nega_max(game_screen, valid_moves):
-    global next_move
     opening_move = get_opening_moves(game_screen, valid_moves)
     if opening_move:
         return opening_move
-    next_move = None
-    nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
-    return next_move
+
+    global next_move
+    best = None
+    moves = list(valid_moves)
+
+    for current_depth in range(1, DEPTH + 1):
+        next_move = None
+        nega_max_alpha_beta_pruning(game_screen, moves, current_depth,
+                                    -CHECKMATE, CHECKMATE,
+                                    1 if game_screen.whiteToMove else -1)
+        if next_move:
+            best = next_move
+            if best in moves:
+                moves.remove(best)
+                moves.insert(0, best)
+
+    return best
 
 def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, turn_multiplier):
     global next_move
 
     board_hash = hash_board(game_screen)
     table_result = transposition_table.lookup(board_hash, depth, alpha, beta)
-
     if table_result is not None:
         return table_result
 
     if depth == 0:
         return quiescence(game_screen, alpha, beta, turn_multiplier)
 
-    #Move ordering
-    valid_moves = order_moves(valid_moves)
+    # Null move pruning
+    R = 2
+    if depth >= 3 and not game_screen.inCheck:
+        game_screen.whiteToMove = not game_screen.whiteToMove
+        null_score = -nega_max_alpha_beta_pruning(game_screen,
+                      game_screen.get_valid_moves(), depth - 1 - R,
+                      -beta, -beta + 1, -turn_multiplier)
+        game_screen.whiteToMove = not game_screen.whiteToMove
+        if null_score >= beta:
+            return beta
+
+    valid_moves = order_moves(valid_moves, depth)
 
     original_alpha = alpha
     max_score = -CHECKMATE
+
     for move in valid_moves:
         game_screen.make_move(move)
         next_moves = game_screen.get_valid_moves()
-        score = -nega_max_alpha_beta_pruning(game_screen, next_moves, depth-1, -beta, -alpha, -turn_multiplier)
+        score = -nega_max_alpha_beta_pruning(game_screen, next_moves, depth - 1, -beta, -alpha, -turn_multiplier)
+        game_screen.undo_move()
+
         if score > max_score:
             max_score = score
             if depth == DEPTH:
                 next_move = move
-        game_screen.undo_move()
+
         if max_score > alpha:
             alpha = max_score
+
         if alpha >= beta:
+            if move.pieceCaptured == "--":
+                store_killer(move, depth)
             break
 
     if max_score <= original_alpha:
@@ -204,14 +357,23 @@ def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, tu
 
     return max_score
 
-def score_move(move):
-    score =0
+def store_killer(move, depth):
+    if killer_moves[depth][0] != move:
+        killer_moves[depth][1] = killer_moves[depth][0]
+        killer_moves[depth][0] = move
+
+def score_move(move, depth=0):
     if move.pieceCaptured != "--":
-        #If we capture queen with pawn = great, if pawn with queen => less urgent
-        score = 10 * piece_rank[move.pieceCaptured[1]] - piece_rank[move.piece_moved[1]]
-    return score
-def order_moves(moves):
-    return sorted(moves, key=score_move, reverse=True)
+        return 10000 + 10 * piece_rank[move.pieceCaptured[1]] - piece_rank[move.piece_moved[1]]
+    if depth < len(killer_moves):
+        if move == killer_moves[depth][0]:
+            return 9000
+        if move == killer_moves[depth][1]:
+            return 8000
+    return 0
+
+def order_moves(moves, depth=0):
+    return sorted(moves, key=lambda m: score_move(m, depth), reverse=True)
 
 knight_table = [
     [-5, -4, -3, -3, -3, -3, -4, -5],

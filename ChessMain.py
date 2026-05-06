@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 import pygame as p
 import ChessEngine, ChessAI
@@ -8,6 +9,9 @@ DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
+ai_thinking = False
+ai_move_result = [None]
+
 
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
@@ -96,11 +100,19 @@ def main():
                     game_over = False
 
         #AI move finder
-        if not game_over and not is_human_turn:
-            ai_move = ChessAI.find_best_move_nega_max(gs, valid_moves)
-            if ai_move is None:
-                ai_move = ChessAI.find_random_move(valid_moves)
-            gs.make_move(ai_move)
+        if not game_over and not is_human_turn and not ai_thinking:
+            ai_thinking = True
+            def ai_thread():
+                ai_move = ChessAI.find_best_move_nega_max(gs, valid_moves)
+                if ai_move is None:
+                    ai_move = ChessAI.find_random_move(valid_moves)
+                ai_move_result[0] = ai_move
+            threading.Thread(target=ai_thread, daemon=True).start()
+
+        if ai_thinking and ai_move_result[0] is not None:
+            gs.make_move(ai_move_result[0])
+            ai_move_result[0] = None
+            ai_thinking = False
             move_made = True
 
         if move_made:
