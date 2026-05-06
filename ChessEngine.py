@@ -451,7 +451,6 @@ class Move():
         self.piece_moved = board[self.start_row][self.start_column]
         self.pieceCaptured = board[self.end_row][self.end_column]
         self.moveID = self.start_row * 1000 + self.start_column * 100 + self.end_row * 10 + self.end_column
-        print(self.moveID)
 
     def __eq__(self, other):
         if isinstance(other, Move):

@@ -3,7 +3,7 @@ import random
 piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player gains when capturing following pieces
 CHECKMATE = 1000 #Always best
 STALEMATE = 0 #neither win nor lose
-DEPTH=4
+DEPTH=2
 
 def find_random_move(valid_moves):
     return valid_moves[random.randint(0, len(valid_moves)-1)]
@@ -30,7 +30,7 @@ def find_best_move(game_screen, valid_moves):
                 elif game_screen.stalemate:
                     score = STALEMATE
                 else:
-                    score = -turn_multiplier * score_material(game_screen.board)
+                    score = -turn_multiplier * score_board(game_screen.board)
                 if score > opponents_max_score:
                     opponents_max_score = score
                 game_screen.undo_move()
@@ -49,7 +49,7 @@ def find_best_move_min_max(game_screen, valid_moves):
 def min_max(game_screen, valid_moves, depth, white_to_move):
     global next_move
     if depth == 0:
-        return score_board(game_screen.board)
+        return score_board(game_screen)
 
     if white_to_move:
         max_score = -CHECKMATE
@@ -76,6 +76,34 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
             game_screen.undo_move()
         return min_score
 
+def find_best_move_nega_max(game_screen, valid_moves):
+    global next_move
+    next_move = None
+    random.shuffle(valid_moves)
+    nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
+    return next_move
+def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, turn_multiplier):
+    global next_move
+    if depth == 0:
+        return turn_multiplier * score_board(game_screen)
+
+    #Move ordering
+    max_score = -CHECKMATE
+    for move in valid_moves:
+        game_screen.make_move(move)
+        next_moves = game_screen.get_valid_moves()
+        score = -nega_max_alpha_beta_pruning(game_screen, next_moves, depth-1, -beta, -alpha, -turn_multiplier)
+        if score > max_score:
+            max_score = score
+            if depth == DEPTH:
+                next_move = move
+
+        game_screen.undo_move()
+        if max_score > alpha:
+            alpha = max_score
+        if alpha >= beta:
+            break
+    return max_score
 #Positive good for white, negative good for black
 def score_board(game_screen):
     if game_screen.checkmate:
