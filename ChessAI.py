@@ -1,5 +1,4 @@
 import random
-import hashlib
 
 class TranspositionTable:
     EXACT = 0
@@ -31,9 +30,8 @@ class TranspositionTable:
 transposition_table = TranspositionTable()
 
 def hash_board(game_screen):
-    board_str = game_screen.board.tobytes()
-    turn = b'w' if game_screen.whiteToMove else b'b'
-    return hashlib.md5(board_str + turn).hexdigest()
+    return hash((tuple(tuple(row) for row in game_screen.board), game_screen.whiteToMove))
+
 
 piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player gains when capturing following pieces
 CHECKMATE = 1000 #Always best
@@ -134,7 +132,6 @@ def min_max(game_screen, valid_moves, depth, white_to_move):
 def find_best_move_nega_max(game_screen, valid_moves):
     global next_move
     next_move = None
-    transposition_table.table.clear()
     nega_max_alpha_beta_pruning(game_screen, valid_moves, DEPTH,-CHECKMATE, CHECKMATE, 1 if game_screen.whiteToMove else -1)
     return next_move
 

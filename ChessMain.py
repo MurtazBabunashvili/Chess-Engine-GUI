@@ -1,7 +1,6 @@
 import os
 import sys
 
-import numpy
 import pygame as p
 import ChessEngine, ChessAI
 WIDTH = HEIGHT = 800
@@ -133,7 +132,7 @@ def drawGameState(screen, gs, valid_moves, square_selected):
     drawPieces(screen, gs.board)
 
 def drawBoard(screen):
-    colors = numpy.array([p.Color("white"), p.Color("lime")])
+    colors = [p.Color("white"), p.Color("lime")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r+c) %2)]
