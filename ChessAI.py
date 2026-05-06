@@ -3,7 +3,7 @@ import random
 piece_rank = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1} #What score player gains when capturing following pieces
 CHECKMATE = 1000 #Always best
 STALEMATE = 0 #neither win nor lose
-DEPTH=2
+DEPTH=4
 
 def find_random_move(valid_moves):
     return valid_moves[random.randint(0, len(valid_moves)-1)]
@@ -46,6 +46,26 @@ def find_best_move_min_max(game_screen, valid_moves):
     min_max(game_screen, valid_moves, DEPTH, game_screen.whiteToMove)
     return next_move
 
+def quiescence(game_screen, alpha, beta, turn_multiplier):
+    stand_pat = turn_multiplier * score_board(game_screen)
+    if stand_pat >= beta:
+        return beta
+    if alpha < stand_pat:
+        alpha = stand_pat
+
+    captures = [move for move in game_screen.get_valid_moves() if move.pieceCaptured != "--"]
+    captures = order_moves(captures)
+
+    for move in captures:
+        game_screen.make_move(move)
+        score = -quiescence(game_screen, -beta, -alpha, -turn_multiplier)
+        game_screen.undo_move()
+        if score >= beta:
+            return beta
+        if score > alpha:
+            alpha = score
+    return alpha
+
 def min_max(game_screen, valid_moves, depth, white_to_move):
     global next_move
     if depth == 0:
@@ -85,7 +105,7 @@ def find_best_move_nega_max(game_screen, valid_moves):
 def nega_max_alpha_beta_pruning(game_screen, valid_moves, depth, alpha, beta, turn_multiplier):
     global next_move
     if depth == 0:
-        return turn_multiplier * score_board(game_screen)
+        return quiescence(game_screen, alpha, beta, turn_multiplier)
 
     #Move ordering
     valid_moves = order_moves(valid_moves)
